@@ -181,7 +181,7 @@ void setup()
    tft.begin();        
    tft.setRotation(2);
    tft.setBrightness(255);
-   uint16_t calData[] = {239, 3926, 233, 265, 3856, 3896, 3714, 308};
+   uint16_t calData[] = {3856, 3896, 3714, 308,  239, 3926, 233, 265};
    tft.setTouchCalibrate(calData);
 
    lv_init();
