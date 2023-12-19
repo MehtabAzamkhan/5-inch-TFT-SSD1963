@@ -223,7 +223,7 @@ void loop()
 - Squareline Setting
 - Resolution => width 800 height 480
 - Color depth => 16 bits
-- Lvgl Version =? 8.3.3
+- Lvgl Version => 8.3.3
 
 
 ## //////////////////////////////////////////////////////////////////////////////////
