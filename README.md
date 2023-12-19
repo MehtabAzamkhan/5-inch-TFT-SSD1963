@@ -1,48 +1,49 @@
-Hey, here we will be working how to configure 5 inch tft with driver ssd1963.
-Here is the pin configuration of LCD with ESP32
+# Hey, here we will be working how to configure 5 inch tft with driver ssd1963.
+_Here is the pin configuration of LCD with ESP32_
 
-/////////////////////////////////////////////////////////////////////////////////////
-LCD pins
-31 32
-29 30
-27 28
-25 26
-23 24
-21 22
-19 20
-17 18
-15 16
-13 14
-11 12
-9  10
-7  8
-5  6
-3  4
-1  2
+## /////////////////////////////////////////////////////////////////////////////////////
+_LCD pins_
+* 31 32
+* 29 30
+* 27 28
+* 25 26
+* 23 24
+* 21 22
+* 19 20
+* 17 18
+* 15 16
+* 13 14
+* 11 12
+* 9  10
+* 7  8
+* 5  6
+* 3  4
+* 1  2
 
-Connection with ESP32
-3.3 => 2
-GND => 1
-D15 => 7
-D2 => 5 
-D4 => 4
-RX2 => 14
-TX2 => 13
-D5 => 6
-D18 => 31
-D19 => 27
-D23 => 29
-D13 => 10
-D12 => 9
-D14 => 16
-D27 => 15
-D26 => 11
-D25 => 12
-D33 => 8
+_Connection with ESP32_
+* 3.3 => 2
+* GND => 1
+* D15 => 7
+* D2 => 5 
+* D4 => 4
+* RX2 => 14
+* TX2 => 13
+* D5 => 6
+* D18 => 31
+* D19 => 27
+* D23 => 29
+* D13 => 10
+* D12 => 9
+* D14 => 16
+* D27 => 15
+* D26 => 11
+* D25 => 12
+* D33 => 8
 
-/////////////////////////////////////////////////////////////////////////////////////
-After pin connections we add following code in arduino Ide
+## /////////////////////////////////////////////////////////////////////////////////////
+_After pin connections we add following code in arduino Ide_
 
+```
 #include <lvgl.h>
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
@@ -215,26 +216,26 @@ void loop()
    delay( 5 );
 }
 
+```
 
-/////////////////////////////////////////////////////////////////////////////////////
-After this we will be opening Squareline studio 
-Squareline Setting
-Resolution => width 800 height 480
-Color depth => 16 bits
-Lvgl Version =? 8.3.3
+## /////////////////////////////////////////////////////////////////////////////////////
+- After this we will be opening Squareline studio 
+- Squareline Setting
+- Resolution => width 800 height 480
+- Color depth => 16 bits
+- Lvgl Version =? 8.3.3
 
 
-/////////////////////////////////////////////////////////////////////////////////////
-Then apply changes in project Settings
-create Template Project and import files
+## /////////////////////////////////////////////////////////////////////////////////////
+- Then apply changes in project Settings
+- create Template Project and import files
 
-Files like Screen.c, helpers.c, ui.h, ui.c, and helpers.h are to be added where arduino project is created.
+- Files like Screen.c, helpers.c, ui.h, ui.c, and helpers.h are to be added where arduino project is created.
 
-/////////////////////////////////////////////////////////////////////////////////////
-Open IDE and change lvgl/lvgl.h to lvgl.h and in screens change ../ui.h to ui.h
+## /////////////////////////////////////////////////////////////////////////////////////
+- Open IDE and change lvgl/lvgl.h to lvgl.h and in screens change ../ui.h to ui.h
+-Add huge app partition in IDE Tool setting adjust COM and Upload the code.
 
-Add huge app partition in IDE Tool setting adjust COM and Upload the code.
-
-/////////////////////////////////////////////////////////////////////////////////////
-Now you have to play with Code and Squareline Studio for backend. As basic setup is completed
+## /////////////////////////////////////////////////////////////////////////////////////
+- Now you have to play with Code and Squareline Studio for backend. As basic setup is completed
 
