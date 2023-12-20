@@ -181,7 +181,32 @@ void setup()
    tft.begin();        
    tft.setRotation(2);
    tft.setBrightness(255);
-   uint16_t calData[] = {3856, 3896, 3714, 308,  239, 3926, 233, 265};
+
+    //Rating 3
+    //uint16_t calData[] = {234, 3878, 226, 227, 3786, 3910, 3757, 325};
+
+    //Rating 2
+    //uint16_t calData[] = {3856, 3896, 3714, 308,  239, 3926, 233, 265};
+
+    //Rating 3
+    //uint16_t calData[5] = {299, 3588, 348, 3474, 1};
+
+    //Rating 1
+    //uint16_t calData[] = {3749, 3619, 3737, 207, 361, 3595, 267, 221};
+
+    //rating 2.5
+    //uint16_t calData[] = {3749, 3619, 3700, 207, 200, 3595, 220, 221};
+     
+    //rating 2.5
+    //uint16_t calData[] = {3749, 3619, 3720, 207, 330, 3595, 267, 221};
+   
+    //rating 2.3
+    //uint16_t calData[] = {3749, 3619, 3737, 207, 361, 3595, 250, 210};
+
+    //Rating 0.8
+    //uint16_t calData[] = {3745, 3605, 3736, 206, 360, 3593, 248, 209};
+
+
    tft.setTouchCalibrate(calData);
 
    lv_init();
