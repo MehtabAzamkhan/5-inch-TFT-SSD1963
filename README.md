@@ -48,10 +48,23 @@ _After pin connections we add following code in arduino Ide_
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 #include "ui.h"
+#include <DHT.h>
+
+
+#include <esp_now.h>
+#include <WiFi.h>
+
+typedef struct struct_message {
+    int b;
+    float c;
+} struct_message;
+// Create a struct_message called myData
+struct_message myData;
 
 
 const int relay = 22;
 volatile bool ledState=false;
+// int values[11];
 
 
 
@@ -132,12 +145,6 @@ public:
 
 LGFX tft;
 
-
-
-
-
-
-
 /*Change to your screen resolution*/
 static const uint16_t screenWidth = 800;
 static const uint16_t screenHeight = 480;
@@ -181,48 +188,41 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
 
 
 
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&myData, incomingData, sizeof(myData));
+  Serial.print("Temperature: ");
+  Serial.println(myData.b);
+  Serial.print(" °C, Humidity: ");
+  Serial.println(myData.c);
+  Serial.println(" %");
+  
+  char temp_str[20];
+  char hum_str[20];
+  dtostrf(myData.b, 4, 2, temp_str); // Convert temperature to string
+  dtostrf(myData.c, 4, 2, hum_str); // Convert humidity to string
+  char display_str[50];
+  sprintf(display_str, "Temp: %s C\nHumidity: %s %%", temp_str, hum_str);
+  lv_textarea_set_text(ui_TextArea1, display_str);
  
+  Serial.println();
+}
 
 void setup() {
   Serial.begin(115200);
+
+   WiFi.mode(WIFI_STA);
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
 
   tft.begin();
   tft.setRotation(2);
   tft.setBrightness(255);
 
   pinMode(relay, OUTPUT);
-  // Rating 3
-  // uint16_t calData[] = {234, 3878, 226, 227, 3786, 3910, 3757, 325};
-
-  // Rating 2
-  //uint16_t calData[] = {3856, 3896, 3714, 308,  239, 3926, 233, 265};
-
-  //Rating 3
-  // uint16_t calData[5] = {299, 3588, 348, 3474, 1};
-
-  //Rating 1
-  //uint16_t calData[] = {3749, 3619, 3737, 207, 361, 3595, 267, 221};
-
-  //rating 2.5
-  // uint16_t calData[] = {3749, 3619, 3700, 207, 200, 3595, 220, 221};
-
-  //rating 2.5
-  // uint16_t calData[] = {3749, 3619, 3720, 207, 330, 3595, 267, 221};
-
-  //rating 2.3
-  // uint16_t calData[] = {3749, 3619, 3737, 207, 361, 3595, 250, 210};
-
-  //Rating 0.8
-  //uint16_t calData[] = {3745, 3605, 3736, 206, 360, 3593, 248, 209};
-
-  //Rating 0.7
-  //uint16_t calData[] = { 3856, 3896, 3714, 308,  239, 3926, 233, 265 };
-
-  //rating 1
-  //uint16_t calData[] = { 3860, 3900, 3714, 308,  225, 3940, 230, 270 };
-
-  //rating 0.5
-  uint16_t calData[] = { 3924, 2807, 3917, 319, 807, 2712, 728, 294};
+  uint16_t calData[] = {3924, 2807, 3917, 319, 807, 2712, 728, 294};
   tft.setTouchCalibrate(calData);
 
   lv_init();
@@ -249,15 +249,17 @@ void setup() {
   ui_init();
 
   lv_obj_add_event_cb(ui_Switch1, LED_ON_1, LV_EVENT_PRESSED, NULL);
-
+  ui_configureScreen_screen_init();
   
+  
+  esp_now_register_recv_cb(OnDataRecv);
 }
 
 void loop() {
-  lv_timer_handler(); /* let the GUI do its work */
-  digitalWrite(relay, ledState);
-  Serial.print("Led is on");
-  delay(5);
+    lv_timer_handler(); /* let the GUI do its work */
+    digitalWrite(relay, ledState);
+    Serial.print("Led is on");
+    delay(5);
 }
 
 
