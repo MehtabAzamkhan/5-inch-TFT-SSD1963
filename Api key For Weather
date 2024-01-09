@@ -1,3 +1,13 @@
-# Weather Api Key
+## Weather Setting
 
-b11c33f5fe228cecd442a9f27a980b51
+Mehtabkhanvip1999@gmail.com
+
+Lat=33.68883868971216, 
+Lon=73.05992171956333
+Api Key 1: b11c33f5fe228cecd442a9f27a980b51
+Api Key 2: 9973a8d09483e834cfe515b9b6e11ae0
+
+
+https://api.openweathermap.org/data/2.5/weather?lat=33.68883868971216&lon=73.05992171956333&appid=9973a8d09483e834cfe515b9b6e11ae0
+
+https://api.openweathermap.org/data/2.5/weather?q=$Islamabad&appid=$9973a8d09483e834cfe515b9b6e11ae0&units=metric	
