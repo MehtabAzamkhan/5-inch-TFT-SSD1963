@@ -55,8 +55,9 @@ _After pin connections we add following code in arduino Ide_
 #include <WiFi.h>
 
 typedef struct struct_message {
-    int b;
-    float c;
+  int b;
+  float c;
+  char timeInfo[50]; // Variable to store time information
 } struct_message;
 // Create a struct_message called myData
 struct_message myData;
@@ -205,6 +206,11 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   lv_textarea_set_text(ui_TextArea1, display_str);
  
   Serial.println();
+
+  char timeString[50];
+  strncpy(timeString, myData.timeInfo, sizeof(timeString));
+  Serial.println(timeString);
+  lv_textarea_set_text(ui_TextArea2, timeString);
 }
 
 void setup() {
