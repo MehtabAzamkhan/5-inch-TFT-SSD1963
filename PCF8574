@@ -1,1 +1,87 @@
-?
+# Created 3 Relays operation on ESP32 by using PCF8754
+```
+/*
+ Blink led on PIN0
+ by Mischianti Renzo <http://www.mischianti.org>
+
+ https://www.mischianti.org/2019/01/02/pcf8574-i2c-digital-i-o-expander-fast-easy-usage/
+*/
+
+#include "Arduino.h"
+#include "PCF8574.h"
+
+// Set i2c address
+PCF8574 pcf8574(0x20);
+
+void setup()
+{
+	Serial.begin(115200);
+//	delay(1000);
+
+	// Set pinMode to OUTPUT
+	pcf8574.pinMode(P0, OUTPUT);
+  pcf8574.pinMode(P1, OUTPUT);
+  pcf8574.pinMode(P2, OUTPUT);
+  pcf8574.pinMode(P3, OUTPUT);
+  pcf8574.pinMode(P4, OUTPUT);
+  pcf8574.pinMode(P5, OUTPUT);
+  pcf8574.pinMode(P6, OUTPUT);
+  pcf8574.pinMode(P7, OUTPUT);
+//	pcf8574.pinMode(P1, INPUT);
+
+	Serial.print("Init pcf8574...");
+	if (pcf8574.begin()){
+		Serial.println("OK");
+	}else{
+		Serial.println("KO");
+	}
+}
+
+void loop()
+{
+ pcf8574.digitalWrite(P0, LOW);
+ pcf8574.digitalWrite(P1, LOW);
+ pcf8574.digitalWrite(P2, LOW);
+ pcf8574.digitalWrite(P3, LOW);
+ pcf8574.digitalWrite(P4, LOW);
+ pcf8574.digitalWrite(P5, LOW);
+ pcf8574.digitalWrite(P6, LOW);
+ pcf8574.digitalWrite(P7, LOW);
+
+ delay(3300);
+
+	pcf8574.digitalWrite(P0, HIGH);
+	delay(300);
+	pcf8574.digitalWrite(P1, HIGH);
+	delay(300);
+	pcf8574.digitalWrite(P2, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P3, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P4, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P5, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P6, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P7, HIGH);
+  delay(300);
+  pcf8574.digitalWrite(P7, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P6, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P5, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P4, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P3, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P2, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P1, LOW);
+  delay(300);
+  pcf8574.digitalWrite(P0, LOW);
+  delay(300);
+}
+
+```
