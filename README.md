@@ -45,35 +45,48 @@ _After pin connections we add following code in arduino Ide_
 
 ```
 #include <lvgl.h>
-#define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 #include "ui.h"
-#include <DHT.h>
 
-
-#include <esp_now.h>
+#include <ArduinoJson.h>          
 #include <WiFi.h>
+#include <WiFiUdp.h>
+#include <HTTPClient.h>
+#include <NTPClient.h>
 
-typedef struct struct_message {
-  int b;
-  float c;
-  char timeInfo[50]; // Variable to store time information
-} struct_message;
-// Create a struct_message called myData
-struct_message myData;
+const char* ssid = "Redmi Note 8 Pro";
+const char* password = "11335577";
+String town="Islamabad";              //EDDIT
+String Country="PK";                //EDDIT
+const String endpoint = "http://api.openweathermap.org/data/2.5/weather?q="+town+","+Country+"&units=metric&APPID=";
+const String key = "b11c33f5fe228cecd442a9f27a980b51"; /*EDDITTTTTTTTTTTTTTTTTTTTTTTT                      */
 
+String payload=""; //whole json 
+String tmp="" ; //temperature
+String hum="" ; //humidity
+String windSpeed = ""; //wind speed
 
-const int relay = 22;
+StaticJsonDocument<1000> doc;
+
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
+// Variables to save date and time
+String formattedDate;
+String dayStamp;
+String timeStamp;
+
+int count = 0;
+
+const int relay = 21;
 volatile bool ledState=false;
-// int values[11];
-
 
 
 class LGFX : public lgfx::LGFX_Device {
   lgfx::Panel_SSD1963 _panel_instance;
   lgfx::Bus_Parallel8 _bus_instance;
   lgfx::Touch_XPT2046 _touch_instance;
-
 
 
 public:
@@ -109,11 +122,11 @@ public:
       cfg.offset_x = 0;
       cfg.offset_y = 0;
       cfg.offset_rotation = 0;
-      cfg.dummy_read_pixel = 1;
-      cfg.dummy_read_bits = 8;
+      cfg.dummy_read_pixel = 8;
+      cfg.dummy_read_bits = 1;
       cfg.readable = true;
       cfg.invert = false;
-      cfg.rgb_order = false;
+      cfg.rgb_order = true;
       cfg.dlen_16bit = false;
       cfg.bus_shared = false;
 
@@ -154,13 +167,14 @@ static lv_color_t buf[screenWidth * 10];
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
+
   uint16_t w = (area->x2 - area->x1 + 1);
   uint16_t h = (area->y2 - area->y1 + 1);
 
   tft.startWrite();
   tft.setAddrWindow(area->x1, area->y1, w, h);
-  //tft.pushColors( ( uint16_t * )&color_p->full, w * h, true );
-  tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
+ tft.pushColors( ( uint16_t * )&color_p->full, w * h, true );
+ tft.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
   tft.endWrite();
 
   lv_disp_flush_ready(disp);
@@ -189,94 +203,142 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
 
 
 
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  memcpy(&myData, incomingData, sizeof(myData));
-  Serial.print("Temperature: ");
-  Serial.println(myData.b);
-  Serial.print(" °C, Humidity: ");
-  Serial.println(myData.c);
-  Serial.println(" %");
-  
-  char temp_str[20];
-  char hum_str[20];
-  dtostrf(myData.b, 4, 2, temp_str); // Convert temperature to string
-  dtostrf(myData.c, 4, 2, hum_str); // Convert humidity to string
-  char display_str[50];
-  sprintf(display_str, "Temp: %s C\nHumidity: %s %%", temp_str, hum_str);
-  lv_textarea_set_text(ui_TextArea1, display_str);
- 
-  Serial.println();
-
-  char timeString[50];
-  strncpy(timeString, myData.timeInfo, sizeof(timeString));
-  Serial.println(timeString);
-  lv_textarea_set_text(ui_TextArea2, timeString);
-}
-
 void setup() {
   Serial.begin(115200);
 
-   WiFi.mode(WIFI_STA);
-  // Init ESP-NOW
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
+//////////////////////////////////////////
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(300);
+    Serial.print(".");
   }
 
-  tft.begin();
-  tft.setRotation(2);
-  tft.setBrightness(255);
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+//////////////////////////////////////////
+   pinMode(relay, OUTPUT);
+   tft.begin();        
+   tft.setRotation(2);
+   tft.setBrightness(255);
+   uint16_t calData[] = {3924, 2807, 3917, 319, 807, 2712, 728, 294};
+   tft.setTouchCalibrate(calData);
 
-  pinMode(relay, OUTPUT);
-  uint16_t calData[] = {3924, 2807, 3917, 319, 807, 2712, 728, 294};
-  tft.setTouchCalibrate(calData);
+   lv_init();
+   lv_disp_draw_buf_init( &draw_buf, buf, NULL, screenWidth * 10 );
 
-  lv_init();
-  lv_disp_draw_buf_init(&draw_buf, buf, NULL, screenWidth * 10);
+   /*Initialize the display*/
+   static lv_disp_drv_t disp_drv;
+   lv_disp_drv_init(&disp_drv);
 
-  /*Initialize the display*/
-  static lv_disp_drv_t disp_drv;
-  lv_disp_drv_init(&disp_drv);
+   /*Change the following line to your display resolution*/
+   disp_drv.hor_res = screenWidth;
+   disp_drv.ver_res = screenHeight;
+   disp_drv.flush_cb = my_disp_flush;
+   disp_drv.draw_buf = &draw_buf;
+   lv_disp_drv_register(&disp_drv);
 
-  /*Change the following line to your display resolution*/
-  disp_drv.hor_res = screenWidth;
-  disp_drv.ver_res = screenHeight;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.draw_buf = &draw_buf;
-  lv_disp_drv_register(&disp_drv);
-
-  /*Initialize the (dummy) input device driver*/
-  static lv_indev_drv_t indev_drv;
-  lv_indev_drv_init(&indev_drv);
-  indev_drv.type = LV_INDEV_TYPE_POINTER;
-  indev_drv.read_cb = my_touchpad_read;
-  lv_indev_drv_register(&indev_drv);
-
-  ui_init();
-
-  lv_obj_add_event_cb(ui_Switch1, LED_ON_1, LV_EVENT_PRESSED, NULL);
-  ui_configureScreen_screen_init();
+   /*Initialize the (dummy) input device driver*/
+   static lv_indev_drv_t indev_drv;
+   lv_indev_drv_init(&indev_drv);
+   indev_drv.type = LV_INDEV_TYPE_POINTER;
+   indev_drv.read_cb = my_touchpad_read;
+   lv_indev_drv_register(&indev_drv);
   
-  
-  esp_now_register_recv_cb(OnDataRecv);
+   
+
+   ui_init();
+   
+    
+   ui_Screen2_screen_init();
+   lv_obj_add_event_cb(ui_ImgButton4, my_event_cb, LV_EVENT_CLICKED, NULL);   
+  timeClient.begin();
+  timeClient.setTimeOffset(5 * 3600); // Set offset time in seconds to adjust for your timezone
+  getData();
+
 }
 
+
+void updateNtp() {
+  if (WiFi.status() == WL_CONNECTED) {
+    while (!timeClient.update()) {
+      timeClient.forceUpdate();
+    }
+
+    formattedDate = timeClient.getFormattedDate();
+    int splitT = formattedDate.indexOf("T");
+    String dateStamp = formattedDate.substring(0, splitT);
+    String timeStamp = formattedDate.substring(splitT + 1, formattedDate.length() - 1);
+
+    lv_label_set_text(ui_Label4, dateStamp.c_str());
+    lv_label_set_text(ui_Label5, timeStamp.c_str());
+  }
+}
+
+
 void loop() {
+  
+    updateNtp();
     lv_timer_handler(); /* let the GUI do its work */
     digitalWrite(relay, ledState);
-    Serial.print("Led is on");
     delay(5);
 }
 
 
-void LED_ON_1(lv_event_t *event){
- lv_obj_t *ui_Switch1 = event->target;
- Serial.print("Inside event->target");
- lv_state_t ui_Switch1State = ui_Switch1->state;
- Serial.print("ui_Switch1->state");
- ledState= lv_obj_has_state(ui_Switch1,LV_STATE_CHECKED);
- Serial.print("ui_Switch1,LV_STATE_CHECKED");
+
+static void my_event_cb(lv_event_t *event) {
+  // Toggle the LED state
+  ledState = !ledState;
+
+  // Update the state of the button based on the LED state
+  lv_imgbtn_set_src(ui_ImgButton4, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_244644622, NULL);
+  lv_imgbtn_set_src(ui_ImgButton4, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_group_154_png, NULL);
+
+  // Print a message (optional)
+  printf("Clicked. LED state: %s\n", ledState ? "ON" : "OFF");
+
+  digitalWrite(relay, ledState);
 }
+
+void getData() {
+  if (WiFi.status() == WL_CONNECTED) { 
+    HTTPClient http;
+ 
+    http.begin(endpoint + key);
+    int httpCode = http.GET();  
+
+    if (httpCode > 0) {
+      payload = http.getString();
+    }
+    else {
+      Serial.println("Error on HTTP request");
+    }
+ 
+    http.end();
+  }
+  char inp[1000];
+  payload.toCharArray(inp, 1000);
+  deserializeJson(doc, inp);
+
+  String tmp2 = doc["main"]["temp"];
+  String hum2 = doc["main"]["humidity"];
+  String windSpeed2 = doc["wind"]["speed"];
+  tmp = tmp2;
+  hum = hum2;
+  windSpeed = windSpeed2;
+
+  // Convert temperature and humidity values to strings
+  char tempStr[10];
+  char humiStr[10];
+  dtostrf(tmp.toFloat(), 4, 1, tempStr);
+  dtostrf(hum.toFloat(), 4, 1, humiStr);
+
+  // Set LVGL text areas with the updated values
+  lv_textarea_set_text(ui_TempTextArea1, tempStr);
+  lv_textarea_set_text(ui_HumiTextArea3, humiStr);
+}
+
 
 ```
 
